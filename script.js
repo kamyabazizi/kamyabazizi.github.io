@@ -1,30 +1,38 @@
-// Wait for the document to load before running the script 
-(function ($) {
-  
-  // We use some Javascript and the URL #fragment to hide/show different parts of the page
-  // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#Linking_to_an_element_on_the_same_page
-  $(window).on('load hashchange', function(){
-    
-    // First hide all content regions, then show the content-region specified in the URL hash 
-    // (or if no hash URL is found, default to first menu item)
-    $('.content-region').hide();
-    
-    // Remove any active classes on the main-menu
-    $('.main-menu a').removeClass('active');
-    var region = location.hash.toString() || $('.main-menu a:first').attr('href');
-    
-    // Now show the region specified in the URL hash
-    $(region).show();
-    
-    // Highlight the menu link associated with this region by adding the .active CSS class
-    $('.main-menu a[href="'+ region +'"]').addClass('active'); 
+jQuery(document).ready(function($) {
 
-    // Alternate method: Use AJAX to load the contents of an external file into a div based on URL fragment
-    // This will extract the region name from URL hash, and then load [region].html into the main #content div
-    // var region = location.hash.toString() || '#first';
-    // $('#content').load(region.slice(1) + '.html')
-    
-  });
-  
-  
-})(jQuery);
+	var my_nav = $('.navbar-sticky'); 
+	// grab the initial top offset of the navigation 
+	var sticky_navigation_offset_top = my_nav.offset().top;
+	
+	// our function that decides weather the navigation bar should have "fixed" css position or not.
+	var sticky_navigation = function(){
+		var scroll_top = $(window).scrollTop(); // our current vertical position from the top
+		
+		// if we've scrolled more than the navigation, change its position to fixed to stick to top, otherwise change it back to relative
+		if (scroll_top > sticky_navigation_offset_top) { 
+			my_nav.addClass( 'stick' );
+		} else {
+			my_nav.removeClass( 'stick' );
+		}   
+	};
+
+	var initio_parallax_animation = function() { 
+		$('.parallax').each( function(i, obj) {
+			var speed = $(this).attr('parallax-speed');
+			if( speed ) {
+				var background_pos = '-' + (window.pageYOffset / speed) + "px";
+				$(this).css( 'background-position', 'center ' + background_pos );
+			}
+		});
+	}
+	
+	// run our function on load
+	sticky_navigation();
+	
+	// and run it again every time you scroll
+	$(window).scroll(function() {
+		 sticky_navigation();
+		 initio_parallax_animation();
+	});
+
+});
