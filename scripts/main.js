@@ -41,3 +41,52 @@ $('a.smooth-scroll')
     }
   }
 });
+
+// Load my latest Pinterest pins into the Photography tab.
+// The pins are written to data/pinterest.json by a GitHub Actions workflow
+// (see .github/workflows/pinterest-sync.yml) so they stay up to date.
+(function() {
+  var $container = $('#pinterest-pins');
+  if (!$container.length) {
+    return;
+  }
+  $.getJSON('data/pinterest.json')
+    .done(function(data) {
+      var pins = data && data.pins;
+      if (!pins || !pins.length) {
+        return;
+      }
+      var html = '';
+      $.each(pins, function(i, pin) {
+        if (!pin || !pin.url) {
+          return;
+        }
+        html += '' +
+          '<div class="col-md-3 col-sm-6 mb-4">' +
+            '<div class="cc-porfolio-image img-raised" data-aos="fade-up" data-aos-anchor-placement="top-bottom">' +
+              '<a href="' + pin.url + '" target="_blank" rel="noopener">' +
+                '<figure class="cc-effect">' +
+                  '<img class="pinterest-pin-img" src="' + pin.image + '" alt="Pinterest pin" loading="lazy"/>' +
+                  '<figcaption>' +
+                    '<div class="h4">Pinterest</div>' +
+                    '<p>View Pin</p>' +
+                  '</figcaption>' +
+                '</figure>' +
+              '</a>' +
+            '</div>' +
+          '</div>';
+      });
+      $container.html(html);
+      if (window.AOS) {
+        AOS.refresh();
+      }
+    })
+    .fail(function() {
+      $container.html(
+        '<div class="col-12 text-center">' +
+          '<p>Could not load pins right now. Please try again later.</p>' +
+          '<a class="btn btn-primary" href="https://www.pinterest.com/kamyabazizi/" target="_blank" rel="noopener">Visit my Pinterest</a>' +
+        '</div>'
+      );
+    });
+})();

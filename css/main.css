@@ -5109,6 +5109,13 @@ Created using IcoMoon - icomoon.io
 .gallery figure.cc-effect:hover img {
   transition-delay: 0.15s; }
 
+/* Pinterest pins */
+.gallery .pinterest-pin-img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  background: #eee; }
+
 /* Header */
 /* Navbar style*/
 .navbar {
