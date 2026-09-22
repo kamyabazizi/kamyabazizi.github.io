@@ -90,3 +90,70 @@ $('a.smooth-scroll')
       );
     });
 })();
+
+// Open Telegram links with the Telegram app instead of a browser tab.
+// The https://t.me/... URL stays in the markup as a graceful fallback, but the
+// click is converted to a tg:// deep link so the installed app handles it. This
+// also works on networks where the t.me website itself is blocked.
+(function() {
+  // How long to wait for the app to take over before falling back to the web.
+  var APP_HANDOFF_TIMEOUT = 1500;
+
+  var $telegramLinks = $('a[href^="https://t.me/"], a[href^="http://t.me/"]');
+  if (!$telegramLinks.length) {
+    return;
+  }
+
+  $telegramLinks.on('click', function(event) {
+    var match = this.href.match(/^https?:\/\/(?:www\.)?t\.me\/([^\/?#]+)/i);
+    if (!match || !match[1]) {
+      return;
+    }
+
+    // Respect ctrl/cmd/shift/middle clicks so users can still open a new tab.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    var domain = match[1];
+    var webUrl = this.href;
+    var appOpened = false;
+    var timer;
+
+    function markAppOpened() {
+      appOpened = true;
+      cleanup();
+    }
+
+    function cleanup() {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      document.removeEventListener('visibilitychange', markAppOpened);
+      window.removeEventListener('pagehide', markAppOpened);
+      window.removeEventListener('blur', markAppOpened);
+    }
+
+    // The browser hides/blurs the page when the OS hands off to the app.
+    document.addEventListener('visibilitychange', markAppOpened);
+    window.addEventListener('pagehide', markAppOpened);
+    window.addEventListener('blur', markAppOpened);
+
+    timer = setTimeout(function() {
+      cleanup();
+      // Nothing took over, so the app is most likely not installed.
+      if (!appOpened && !document.hidden) {
+        window.open(webUrl, '_blank', 'noopener');
+      }
+    }, APP_HANDOFF_TIMEOUT);
+
+    // Some browsers try to navigate for unknown schemes and others ignore it.
+    try {
+      window.location.href = 'tg://resolve?domain=' + encodeURIComponent(domain);
+    } catch (error) {
+      // Ignore: the timeout above still falls back to the web URL.
+    }
+  });
+})();
